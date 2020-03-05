@@ -1,40 +1,119 @@
 from selenium import webdriver
 from time import sleep
+from selenium.webdriver.common.keys import Keys
 
 from selenium.common.exceptions import NoSuchElementException
 
-kaupat = ['Palokka', 'Keljo', 'Seppälä', 'Kotikenttä', 'Lutakko', 'Länsiväylä', 'Ainola', 'Aittorinne', 'Kotiväylä', 'K-Market Kuokkalanpelto', 'Schaumanin puistotie',
-          'K-Market Torikeskus']
+kaupat = ['K-Citymarket Jyväskylä Palokka', 'K-Citymarket Keljo', 'K-Citymarket Seppälä', 'K-Supermarket Kotikenttä', 'K-Supermarket Lutakko', 'K-Supermarket Länsiväylä',
+          'K-Market Ainola', 'K-Market Aittorinne', 'K-Market Kotiväylä', 'K-Market Kuokkalanpelto', 'K-Market Schaumanin puistotie','K-Market Torikeskus']
 
+skaupat = ['Mestarin Herkku', 'Prisma Keljo Jyväskylä', 'Prisma Palokka', 'Prisma Seppälä Jyväskylä', 'S-market Kolmikulma', 'S-market Kuokkala', 'S-Market Palokka',
+           'S-market Savela']
 
 driver = webdriver.Firefox()
 driver.get("https://www.k-ruoka.fi/")
 
+d = webdriver.Firefox()
+d.get("https://www.foodie.fi")
 
-def loop(hakusana):
 
-        driver.find_element_by_xpath("/html/body/div[1]/section/header/div[1]/nav/ul[1]/li[1]/a/span").click()
-        driver.find_element_by_xpath("/html/body/div[1]/section/header/div[1]/nav/ul[2]/div/nav/div[2]/div/span/span").click()
-        driver.find_element_by_xpath("/html/body/div[2]/div/div[2]/div[2]/form/div/div/input").send_keys(k)
+def kloop(hakusana1, hakusana2):
+
+    driver.find_element_by_xpath("/html/body/div[1]/section/header/div[1]/nav/ul[1]/li[1]/a/span").click()
+    driver.find_element_by_xpath("/html/body/div[1]/section/header/div[1]/nav/ul[2]/div/nav/div[2]/div/span/span").click()
+    driver.find_element_by_xpath("/html/body/div[2]/div/div[2]/div[2]/form/div/div/input").send_keys(k)
+    sleep(2)
+    driver.find_element_by_xpath("/html/body/div[2]/div/div[2]/div[2]/div/div/a[1]/div[1]/div[2]").click()
+    driver.find_element_by_xpath("/html/body/div[1]/section/section/div[2]/div[1]/div/div[2]/div/div[3]/input").clear()
+    driver.find_element_by_xpath("/html/body/div[1]/section/section/div[2]/div[1]/div/div[2]/div/div[3]/input").send_keys(hakusana1)
+    sleep(2)
+    try:
+        driver.find_element_by_xpath("/html/body/div[1]/section/section/div[2]/div[2]/div/div/div/div/div/ul/li[1]/div/a").click()
         sleep(2)
-        driver.find_element_by_xpath("/html/body/div[2]/div/div[2]/div[2]/div/div/a[1]/div[1]/div[2]").click()
-        driver.find_element_by_xpath("/html/body/div[1]/section/section/div[2]/div[1]/div/div[2]/div/div[3]/input").clear()
-        driver.find_element_by_xpath("/html/body/div[1]/section/section/div[2]/div[1]/div/div[2]/div/div[3]/input").send_keys(hakusana)
+        a = driver.find_element_by_xpath("/html/body/div[1]/section/section/div[2]/div[2]/section/section/div/div[1]/section/section[1]/div[1]/div/div[1]/span").text
+        palautus1 = " - Twelvi maksaa: " + a
+        driver.find_element_by_xpath('/html/body/div[1]/section/section/div[2]/div[2]/section/section/div/div[1]/section/a').click()
+    except NoSuchElementException:
+        pass
+        palautus1 = " - Ei myy twelviä"
+
+    sleep(5)
+    driver.find_element_by_xpath("/html/body/div[1]/section/section/div[2]/div[1]/div/div[2]/div/div[3]/input").clear()
+    driver.find_element_by_xpath("/html/body/div[1]/section/section/div[2]/div[1]/div/div[2]/div/div[3]/input").send_keys(hakusana2)
+
+    try:
         sleep(2)
-        try:
-            driver.find_element_by_xpath("/html/body/div[1]/section/section/div[2]/div[2]/div/div/div/div/div/ul/li[1]/div/a").click()
-            sleep(2)
-            a = driver.find_element_by_xpath("/html/body/div[1]/section/section/div[2]/div[2]/section/section/div/div[1]/section/section[1]/div[1]/div/div[1]/span").text
-            return k + " - Hinta: " + a
-        except NoSuchElementException:
-            return k + " - Ei myy"
+        driver.find_element_by_xpath('/html/body/div[1]/section/section/div[2]/div[2]/div/div/div/div/div/ul/li[1]/div/a ').click()
+        sleep(2)
+        b = driver.find_element_by_xpath("/html/body/div[1]/section/section/div[2]/div[2]/section/section/div/div[1]/section/section[1]/div[1]/div/div[1]/span").text
+        palautus2 = " - Sixi maksaa: " + b
+    except NoSuchElementException:
+        pass
+        palautus2 = " - Ei myy sixiä"
+
+    return k + palautus1 + palautus2
 
 
-print("Twelvit: \n")
+def sloop(hakusana1, hakusana2):
+
+    d.find_element_by_xpath('/html/body/div[5]/div[2]/header/div[3]/div/div[1]/div/nav/ul/li[4]/div/a/span').click()
+    sleep(2)
+    d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(s)
+    d.find_element_by_xpath('//*[@id="multisearch-btn"]').click()
+    sleep(2)
+    d.find_element_by_xpath('/html/body/div[5]/div[2]/div[7]/div/div[3]/div[2]/div/ul/li[1]/div[1]/div[1]/a[2]').click()
+    sleep(4)
+    d.find_element_by_xpath('/html/body/div[5]/div[2]/header/div[2]/div/div/div/div/a').click()
+    sleep(2)
+    d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(hakusana1)
+    d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(Keys.ENTER)
+    sleep(2)
+    try:
+        sleep(2)
+        d.find_element_by_xpath('/html/body/div[5]/div[2]/div[7]/div/div[2]/div[2]/div/div[3]/ul/li/a/div/img').click()
+        sleep(2)
+        a = d.find_element_by_xpath('/html/body/div[7]/div/div/div/div[2]/div[2]/div[2]/div[1]/div/div[1]/div[2]/div/div/div[1]/div[1]/span[1]').text
+        b = d.find_element_by_xpath('/html/body/div[7]/div/div/div/div[2]/div[2]/div[2]/div[1]/div/div[1]/div[2]/div/div/div[1]/div[1]/span[2]').text
+        d.find_element_by_xpath('/html/body/div[7]/div/div/div/div[1]/button/span[1]').click()
+        palautus1 =  " - Twelvi maksaa: " + a+","+b
+
+    except NoSuchElementException:
+        pass
+        palautus1 = " - Ei myy twelviä"
+
+    sleep(2)
+    d.find_element_by_xpath('//*[@id="multisearch-query"]').clear()
+    sleep(2)
+    d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(hakusana2)
+    sleep(2)
+    d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(Keys.ENTER)
+    sleep(2)
+
+    try:
+        d.find_element_by_xpath('/html/body/div[5]/div[2]/div[7]/div/div[2]/div[2]/div/div[3]/ul/li/a/div/img').click()
+        sleep(2)
+        x = d.find_element_by_xpath('/html/body/div[7]/div/div/div/div[2]/div[2]/div[2]/div[1]/div/div[1]/div[2]/div/div/div[1]/div[1]/span[1]').text
+        y = d.find_element_by_xpath('/html/body/div[7]/div/div/div/div[2]/div[2]/div[2]/div[1]/div/div[1]/div[2]/div/div/div[1]/div[1]/span[2]').text
+        d.find_element_by_xpath('/html/body/div[7]/div/div/div/div[1]/button/span[1]').click()
+        palautus2 = " - Sixi maksaa "+ x + "," + y
+        sleep(1)
+    except NoSuchElementException:
+        pass
+        palautus2 = " - Ei myy sixiä"
+        sleep(1)
+
+    return s + palautus1 + palautus2
+
+
+print("K-kaupat: \n")
 for k in kaupat:
-    print(loop("Laitilan kukko 12-"))
+    print(kloop("Laitilan kukko 12-", "Kukko lager 6-"))
 
-print("Sixit: \n")
-for k in kaupat:
-    print(loop("Kukko lager 6-pack"))
+driver.close()
+
+print("S-kaupat: \n")
+for s in skaupat:
+    print(sloop("Laitilan kukko 12-", "Laitilan kukko lager 6-"))
+
+d.close()
 
