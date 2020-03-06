@@ -191,7 +191,7 @@ for i in range(20):
 
     for s in skaupat:
         print(sloop("Laitilan kukko 12-", "Laitilan kukko lager 6-"))
-    print(i + "Kieppi")
+    print(str(i) + "Kieppi")
 
 
 driver.close()
