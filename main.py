@@ -8,15 +8,24 @@ conn = sqlite3.connect("kukko.db")
 c = conn.cursor()
 
 
-def create_table():
-    c.execute("CREATE TABLE IF NOT EXISTS kaupat (id INTEGER PRIMARY KEY, nimi TEXT)")
+#def create_table():
+ #   c.execute("CREATE TABLE IF NOT EXISTS tuote (id INTEGER PRIMARY KEY, kauppa_id INTEGER, nimi TEXT, hinta TEXT, date TEXT, FOREIGN KEY(kauppa_id) REFERENCES kaupat(id))")
 
 
-def insert_kaupat(kauppa):
-    c.execute("INSERT INTO kaupat (nimi) VALUES (?)", [s])
+#def insert_kaupat(kauppa,ketju):
+  #  c.execute("INSERT INTO kaupat (nimi, ketju) VALUES (?, ?)", (kauppa,ketju))
+   # conn.commit()
+
+def hinta_tauluun(kauppa_id, nimi, hinta, date):
+    c.execute(("INSERT INTO tuote (kauppa_id, nimi, hinta, date) VALUES (?,?,?,?"), (kauppa_id,nimi,hinta,date))
     conn.commit()
 
+def select_kaupat(ketju):
+    c.execute("SELECT * FROM kaupat WHERE ketju = ?", [ketju])
+    return c.fetchall()
 
+
+'''
 kaupat = [
     "K-Citymarket Jyväskylä Palokka",
     "K-Citymarket Keljo",
@@ -42,9 +51,9 @@ skaupat = [
     "S-Market Palokka",
     "S-market Savela",
 ]
+'''
 
-
-def kloop(hakusana1, hakusana2):
+def kloop(kauppa, hakusana1, hakusana2):
 
     driver.find_element_by_xpath(
         "/html/body/div[1]/section/header/div[1]/nav/ul[1]/li[1]/a/span"
@@ -54,7 +63,7 @@ def kloop(hakusana1, hakusana2):
     ).click()
     driver.find_element_by_xpath(
         "/html/body/div[2]/div/div[2]/div[2]/form/div/div/input"
-    ).send_keys(k)
+    ).send_keys(kauppa)
     sleep(2)
     driver.find_element_by_xpath(
         "/html/body/div[2]/div/div[2]/div[2]/div/div/a[1]/div[1]/div[2]"
@@ -99,16 +108,16 @@ def kloop(hakusana1, hakusana2):
         pass
         palautus2 = " - Ei myy sixiä"
 
-    return k + palautus1 + palautus2
+    return kauppa + palautus1 + palautus2
 
 
-def sloop(hakusana1, hakusana2):
+def sloop(kauppa, hakusana1, hakusana2):
 
     d.find_element_by_xpath(
         "/html/body/div[5]/div[2]/header/div[3]/div/div[1]/div/nav/ul/li[4]/div/a/span"
     ).click()
     sleep(5)
-    d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(s)
+    d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(kauppa)
     d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(Keys.ENTER)
     sleep(5)
     d.find_element_by_xpath(
@@ -175,24 +184,32 @@ def sloop(hakusana1, hakusana2):
         palautus2 = " - Ei myy sixiä"
         sleep(1)
 
-    return s + palautus1 + palautus2
+    return kauppa + palautus1 + palautus2
+
+skaupat = select_kaupat("S-Ryhmä")
+print(skaupat)
+kkaupat = select_kaupat("Kesko")
+print(kkaupat)
+
+
+'''
+hinta_tauluun()
+'''
 
 
 driver = webdriver.Firefox()
 driver.get("https://www.k-ruoka.fi/")
+
+for k in kkaupat:
+    print(kloop(k[1],"Laitilan kukko 12-", "Kukko lager 6-pack"))
+driver.close()
+
 d = webdriver.Firefox()
 
-
-for i in range(20):
-    d.get("https://www.foodie.fi")
-    driver.get("https://www.k-ruoka.fi/")
-    for k in kaupat:
-        print(kloop("Laitilan kukko 12-", "Kukko lager 6-"))
-
-    for s in skaupat:
-        print(sloop("Laitilan kukko 12-", "Laitilan kukko lager 6-"))
-    print(i + "Kieppi")
+d.get("https://www.foodie.fi")
+for s in skaupat:
+    print(sloop(s[1],"Laitilan kukko 12-", "kukko lager 6-"))
 
 
-driver.close()
 d.close()
+
