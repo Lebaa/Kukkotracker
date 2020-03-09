@@ -165,13 +165,13 @@ def sloop(kauppa, kauppa_id, tuotteet):
             d.find_element_by_xpath(
                 "/html/body/div[7]/div/div/div/div[1]/button/span[1]"
             ).click()
-            sleep(4)
+            sleep(6)
             palautus1 = " - Twelvi maksaa: " + a
 
         except NoSuchElementException:
             pass
             print("Ei myy tuotetta :" + t[1])
-            sleep(4)
+            sleep(6)
 
 
 date = datetime.datetime.now().strftime("%d.%m.%Y")
@@ -193,6 +193,8 @@ for k in kkaupat:
 driver.close()
 """
 for i in range(10):
+    print("KIEPPI " + str(i))
+    print(datetime.datetime.now().strftime("%H:%M:%S"))
     d = webdriver.Firefox()
     d.get("https://www.foodie.fi")
     for s in skaupat:
