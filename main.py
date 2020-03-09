@@ -3,29 +3,57 @@ from time import sleep
 from selenium.webdriver.common.keys import Keys
 import sqlite3
 from selenium.common.exceptions import NoSuchElementException
+import datetime
 
 conn = sqlite3.connect("kukko.db")
 c = conn.cursor()
 
 
-#def create_table():
- #   c.execute("CREATE TABLE IF NOT EXISTS tuote (id INTEGER PRIMARY KEY, kauppa_id INTEGER, nimi TEXT, hinta TEXT, date TEXT, FOREIGN KEY(kauppa_id) REFERENCES kaupat(id))")
+def create_kauppa():
+    c.execute(
+        "CREATE TABLE IF NOT EXISTS kauppa ( id INTEGER PRIMARY KEY, nimi, ketju)"
+    )
 
 
-#def insert_kaupat(kauppa,ketju):
-  #  c.execute("INSERT INTO kaupat (nimi, ketju) VALUES (?, ?)", (kauppa,ketju))
-   # conn.commit()
+def create_tuote():
+    c.execute(
+        "CREATE TABLE IF NOT EXISTS tuote (id INTEGER PRIMARY KEY, nimi TEXT, yksiköt TEXT, khakusana TEXT, s_hakusana TEXT)"
+    )
 
-def hinta_tauluun(kauppa_id, nimi, hinta, date):
-    c.execute(("INSERT INTO tuote (kauppa_id, nimi, hinta, date) VALUES (?,?,?,?"), (kauppa_id,nimi,hinta,date))
+
+def create_hintaKaupassa():
+    c.execute(
+        "CREATE TABLE IF NOT EXISTS hintaKaupassa ( id INTEGER PRIMARY KEY, tuote_id INTEGER, kauppa_id INTEGER, hinta TEXT, paivays TEXT, FOREIGN KEY(tuote_id) REFERENCES tuote(id), FOREIGN KEY(kauppa_id) REFERENCES kauppa(id))"
+    )
+
+
+def insert_kaupat(kauppa, ketju):
+    c.execute("INSERT INTO kauppa (nimi, ketju) VALUES (?, ?)", (kauppa, ketju))
     conn.commit()
 
+
+def hinta_tauluun(kauppa_id, tuote_id, hinta, date):
+    sql = "INSERT INTO hintaKaupassa (tuote_id, kauppa_id, paivays) VALUES (?,?,?,?)"
+    c.execute(sql, (kauppa_id, tuote_id, hinta, date))
+    conn.commit()
+
+
 def select_kaupat(ketju):
-    c.execute("SELECT * FROM kaupat WHERE ketju = ?", [ketju])
+    c.execute("SELECT * FROM kauppa WHERE ketju = ?", [ketju])
     return c.fetchall()
 
 
-'''
+def get_tuotteet():
+    c.execute("SELECT * FROM tuote")
+    return c.fetchall()
+
+
+def update_hinta(kauppa_id, hinta, date, tuote_id):
+    sql = "UPDATE tuote SET hinta = ?, date = ? WHERE id = ?"
+    c.execute(sql, (kauppa_id, hinta, date, tuote_id))
+
+
+"""
 kaupat = [
     "K-Citymarket Jyväskylä Palokka",
     "K-Citymarket Keljo",
@@ -51,9 +79,10 @@ skaupat = [
     "S-Market Palokka",
     "S-market Savela",
 ]
-'''
+"""
 
-def kloop(kauppa, hakusana1, hakusana2):
+
+def kloop(kauppa, kauppa_id, tuotteet):
 
     driver.find_element_by_xpath(
         "/html/body/div[1]/section/header/div[1]/nav/ul[1]/li[1]/a/span"
@@ -71,47 +100,32 @@ def kloop(kauppa, hakusana1, hakusana2):
     khaku = driver.find_element_by_xpath(
         "/html/body/div[1]/section/section/div[2]/div[1]/div/div[2]/div/div[3]/input"
     )
-    khaku.clear()
-    khaku.send_keys(hakusana1)
-    sleep(2)
-    try:
-        driver.find_element_by_xpath(
-            "/html/body/div[1]/section/section/div[2]/div[2]/div/div/div/div/div/ul/li[1]/div/a"
-        ).click()
+    for t in tuotteet:
+
+        khaku.clear()
+        khaku.send_keys(t[3])
         sleep(2)
-        a = driver.find_element_by_xpath(
-            "/html/body/div[1]/section/section/div[2]/div[2]/section/section/div/div[1]/section/section[1]/div[1]/div/div[1]/span"
-        ).text
-        palautus1 = " - Twelvi maksaa: " + a
-        driver.find_element_by_xpath(
-            "/html/body/div[1]/section/section/div[2]/div[2]/section/section/div/div[1]/section/a"
-        ).click()
-    except NoSuchElementException:
-        pass
-        palautus1 = " - Ei myy twelviä"
+        try:
+            driver.find_element_by_xpath(
+                "/html/body/div[1]/section/section/div[2]/div[2]/div/div/div/div/div/ul/li[1]/div/a"
+            ).click()
+            sleep(2)
+            a = driver.find_element_by_xpath(
+                "/html/body/div[1]/section/section/div[2]/div[2]/section/section/div/div[1]/section/section[1]/div[1]/div/div[1]/span"
+            ).text
+            palautus1 = " - Twelvi maksaa: " + a
+            driver.find_element_by_xpath(
+                "/html/body/div[1]/section/section/div[2]/div[2]/section/section/div/div[1]/section/a"
+            ).click()
+        except NoSuchElementException:
+            pass
+            print("ei myy tuotetta: " + t[1])
 
-    sleep(5)
-    khaku.clear()
-    khaku.send_keys(hakusana2)
-
-    try:
-        sleep(2)
-        driver.find_element_by_xpath(
-            "/html/body/div[1]/section/section/div[2]/div[2]/div/div/div/div/div/ul/li[1]/div/a "
-        ).click()
-        sleep(2)
-        b = driver.find_element_by_xpath(
-            "/html/body/div[1]/section/section/div[2]/div[2]/section/section/div/div[1]/section/section[1]/div[1]/div/div[1]/span"
-        ).text
-        palautus2 = " - Sixi maksaa: " + b
-    except NoSuchElementException:
-        pass
-        palautus2 = " - Ei myy sixiä"
-
-    return kauppa + palautus1 + palautus2
+        # hinta_tauluun(kauppa_id, "Kukko lager 12-pack", palautus1, date)
+        # hinta_tauluun(kauppa_id, "Kukko lager 6-pack", palautus2, date)
 
 
-def sloop(kauppa, hakusana1, hakusana2):
+def sloop(kauppa, kauppa_id, tuotteet):
 
     d.find_element_by_xpath(
         "/html/body/div[5]/div[2]/header/div[3]/div/div[1]/div/nav/ul/li[4]/div/a/span"
@@ -128,94 +142,60 @@ def sloop(kauppa, hakusana1, hakusana2):
         "/html/body/div[5]/div[2]/header/div[2]/div/div/div/div/a"
     ).click()
     sleep(5)
-    d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(hakusana1)
-    d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(Keys.ENTER)
-    sleep(5)
-    try:
+    for t in tuotteet:
+        d.find_element_by_xpath('//*[@id="multisearch-query"]').clear()
+        d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(t[4])
+        d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(Keys.ENTER)
         sleep(5)
-        d.find_element_by_xpath(
-            "/html/body/div[5]/div[2]/div[7]/div/div[2]/div[2]/div/div[3]/ul/li/a/div/img"
-        ).click()
-        sleep(5)
-        a = (
+        try:
+            sleep(5)
             d.find_element_by_xpath(
-                "/html/body/div[7]/div/div/div/div[2]/div[2]/div[2]/div[1]/div/div[1]/div[2]/div/div/div[1]/div[1]/span[1]"
-            ).text
-            + ","
-            + d.find_element_by_xpath(
-                "/html/body/div[7]/div/div/div/div[2]/div[2]/div[2]/div[1]/div/div[1]/div[2]/div/div/div[1]/div[1]/span[2]"
-            ).text
-        )
-        d.find_element_by_xpath(
-            "/html/body/div[7]/div/div/div/div[1]/button/span[1]"
-        ).click()
-        palautus1 = " - Twelvi maksaa: " + a
+                "/html/body/div[5]/div[2]/div[7]/div/div[2]/div[2]/div/div[3]/ul/li/a/div/img"
+            ).click()
+            sleep(5)
+            a = (
+                d.find_element_by_xpath(
+                    "/html/body/div[7]/div/div/div/div[2]/div[2]/div[2]/div[1]/div/div[1]/div[2]/div/div/div[1]/div[1]/span[1]"
+                ).text
+                + ","
+                + d.find_element_by_xpath(
+                    "/html/body/div[7]/div/div/div/div[2]/div[2]/div[2]/div[1]/div/div[1]/div[2]/div/div/div[1]/div[1]/span[2]"
+                ).text
+            )
+            d.find_element_by_xpath(
+                "/html/body/div[7]/div/div/div/div[1]/button/span[1]"
+            ).click()
+            sleep(4)
+            palautus1 = " - Twelvi maksaa: " + a
 
-    except NoSuchElementException:
-        pass
-        palautus1 = " - Ei myy twelviä"
+        except NoSuchElementException:
+            pass
+            print("Ei myy tuotetta :" + t[1])
+            sleep(4)
 
-    sleep(2)
-    d.find_element_by_xpath('//*[@id="multisearch-query"]').clear()
-    sleep(2)
-    d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(hakusana2)
-    sleep(2)
-    d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(Keys.ENTER)
-    sleep(2)
 
-    try:
-        d.find_element_by_xpath(
-            "/html/body/div[5]/div[2]/div[7]/div/div[2]/div[2]/div/div[3]/ul/li/a/div/img"
-        ).click()
-        sleep(5)
-        x = d.find_element_by_xpath(
-            "/html/body/div[7]/div/div/div/div[2]/div[2]/div[2]/div[1]/div/div[1]/div[2]/div/div/div[1]/div[1]/span[1]"
-        ).text
-        y = d.find_element_by_xpath(
-            "/html/body/div[7]/div/div/div/div[2]/div[2]/div[2]/div[1]/div/div[1]/div[2]/div/div/div[1]/div[1]/span[2]"
-        ).text
-        d.find_element_by_xpath(
-            "/html/body/div[7]/div/div/div/div[1]/button/span[1]"
-        ).click()
-        palautus2 = " - Sixi maksaa " + x + "," + y
-        sleep(1)
-    except NoSuchElementException:
-        pass
-        palautus2 = " - Ei myy sixiä"
-        sleep(1)
-
-    return kauppa + palautus1 + palautus2
-
+date = datetime.datetime.now().strftime("%d.%m.%Y")
+print(date)
+create_tuote()
 skaupat = select_kaupat("S-Ryhmä")
-print(skaupat)
 kkaupat = select_kaupat("Kesko")
-print(kkaupat)
 
 
-'''
-hinta_tauluun()
-'''
+tuotteet = get_tuotteet()
+print(tuotteet)
 
-
+"""
 driver = webdriver.Firefox()
 driver.get("https://www.k-ruoka.fi/")
 
 for k in kkaupat:
-    print(kloop(k[1],"Laitilan kukko 12-", "Kukko lager 6-pack"))
+    kloop(k[1], k[0], tuotteet)
 driver.close()
-
-d = webdriver.Firefox()
-
-<<<<<<< HEAD
+"""
+for i in range(10):
+    d = webdriver.Firefox()
+    d.get("https://www.foodie.fi")
     for s in skaupat:
-        print(sloop("Laitilan kukko 12-", "Laitilan kukko lager 6-"))
-    print(str(i) + "Kieppi")
-=======
-d.get("https://www.foodie.fi")
-for s in skaupat:
-    print(sloop(s[1],"Laitilan kukko 12-", "kukko lager 6-"))
->>>>>>> 4a17af2e640a41eb51c8922926ae285bdee384da
-
-
-d.close()
+        sloop(s[1], s[0], tuotteet)
+    d.close()
 
