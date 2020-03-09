@@ -26,10 +26,18 @@ def create_hintaKaupassa():
         "CREATE TABLE IF NOT EXISTS hintaKaupassa ( id INTEGER PRIMARY KEY, tuote_id INTEGER, kauppa_id INTEGER, hinta TEXT, paivays TEXT, FOREIGN KEY(tuote_id) REFERENCES tuote(id), FOREIGN KEY(kauppa_id) REFERENCES kauppa(id))"
     )
 
+
+def create_hinta_historia():
+    c.execute(
+        "CREATE TABLE IF NOT EXISTS hintaHistoria ( id INTEGER PRIMARY KEY, tuote_id INTEGER, kauppa_id INTEGER, hinta TEXT, alkupvm TEXT, FOREIGN KEY(tuote_id) REFERENCES tuote(id), FOREIGN KEY(kauppa_id) REFERENCES kauppa(id))"
+    )
+
+
 def insert_tuote(nimi, nro, khaku, shkau):
     sql = "INSERT INTO tuote (nimi, yksiköt, k_hakusana, s_hakusana) VALUES (?,?,?,?)"
     c.execute(sql, (nimi, nro, khaku, shkau))
     conn.commit()
+
 
 def insert_kaupat(kauppa, ketju):
     c.execute("INSERT INTO kauppa (nimi, ketju) VALUES (?, ?)", (kauppa, ketju))
@@ -51,30 +59,48 @@ def get_tuotteet():
     c.execute("SELECT * FROM tuote")
     return c.fetchall()
 
-def get_hinta(kauppa_id, tuote_id):
+
+def get_hinta(tuote_id, kauppa_id):
     sql = "SELECT * FROM hintaKaupassa WHERE kauppa_id = ? AND tuote_ID = ?"
-    c.execute(sql,(kauppa_id,tuote_id))
+    c.execute(sql, (kauppa_id, tuote_id))
     return c.fetchall()
 
 
-
-def update_hinta(kauppa_id, tuote_id, hinta, date,):
+def update_hinta(tuote_id, kauppa_id, hinta, date):
     sql = "UPDATE hintaKaupassa SET hinta = ?, paivays = ? WHERE kauppa_id = ? AND tuote_id = ?"
-    c.execute(sql, (kauppa_id, tuote_id, hinta, date))
+    c.execute(sql, (hinta, date, kauppa_id, tuote_id))
     conn.commit()
 
-def hintavertailu(kauppa_id, tuote_id, hinta_nyt):
-    if len(get_hinta(kauppa_id, tuote_id)) == 0:
+
+def insert_historia(tuote_id, kauppa_id, hinta, date):
+    sql = "INSERT INTO hintaHistoria (tuote_id, kauppa_id, hinta, alkupvm) VALUES (?,?,?,?)"
+    c.execute(sql, (tuote_id, kauppa_id, hinta, date))
+    conn.commit()
+
+
+def hintavertailu(tuote_id, kauppa_id, hinta_nyt):
+
+    if len(get_hinta(tuote_id, kauppa_id)) == 0:
         print("tyhjää")
-        # hinta_tauluun(t[0], kauppa_id, palautus, date)
+        hinta_tauluun(tuote_id, kauppa_id, hinta_nyt, date)
     elif str(hinta_nyt).strip() == str(get_hinta(kauppa_id, tuote_id)[0][3]).strip():
         print("sama hinta")
     else:
-        print("muka eri hinta?")
-        print(get_hinta(kauppa_id,tuote_id)[0][3] + " - " + hinta_nyt)
+        print(str(tuote_id), " + " + str(kauppa_id))
+        get = get_hinta(tuote_id, kauppa_id)[0]
+        hist_hinta = get[3]
+        hist_pvm = get[4]
+        insert_historia(tuote_id, kauppa_id, hist_hinta, hist_pvm)
+        update_hinta(tuote_id, kauppa_id, hinta_nyt, date)
+        print(
+            "Hinta muuttunut: "
+            + get_hinta(kauppa_id, tuote_id)[0][3]
+            + " - "
+            + hinta_nyt
+        )
 
 
-'''
+"""
 
 kaupat = [
     "K-Citymarket Jyväskylä Palokka",
@@ -100,9 +126,7 @@ skaupat = [
     "S-market Kuokkala",
     "S-Market Palokka",
     "S-market Savela",
-]'''
-
-
+]"""
 
 
 def kloop(kauppa, kauppa_id, tuotteet):
@@ -116,7 +140,7 @@ def kloop(kauppa, kauppa_id, tuotteet):
     driver.find_element_by_xpath(
         "/html/body/div[2]/div/div[2]/div[2]/form/div/div/input"
     ).send_keys(kauppa)
-    sleep(2)
+    sleep(5)
     driver.find_element_by_xpath(
         "/html/body/div[2]/div/div[2]/div[2]/div/div/a[1]/div[1]/div[2]"
     ).click()
@@ -126,8 +150,9 @@ def kloop(kauppa, kauppa_id, tuotteet):
     for t in tuotteet:
 
         khaku.clear()
-        khaku.send_keys(t[3])
         sleep(2)
+        khaku.send_keys(t[3])
+        sleep(5)
         try:
             driver.find_element_by_xpath(
                 "/html/body/div[1]/section/section/div[2]/div[2]/div/div/div/div/div/ul/li[1]/div/a"
@@ -139,12 +164,11 @@ def kloop(kauppa, kauppa_id, tuotteet):
             driver.find_element_by_xpath(
                 "/html/body/div[1]/section/section/div[2]/div[2]/section/section/div/div[1]/section/a"
             ).click()
-            palautus = a
+            hintavertailu(t[0], kauppa_id, a)
         except NoSuchElementException:
             pass
-            palautus = "Ei valikoimassa"
-
-        hinta_tauluun(t[0], kauppa_id, palautus, date)
+            a = "Ei valikoimassa"
+            hintavertailu(t[0], kauppa_id, a)
 
 
 def sloop(kauppa, kauppa_id, tuotteet):
@@ -190,14 +214,13 @@ def sloop(kauppa, kauppa_id, tuotteet):
             ).click()
             sleep(6)
 
-            hintavertailu(kauppa_id, t[0], a)
+            hintavertailu(t[0], kauppa_id, a)
 
         except NoSuchElementException:
             pass
             a = "Ei valikoimassa"
-            hintavertailu(kauppa_id, t[0], a)
+            hintavertailu(t[0], kauppa_id, a)
             sleep(6)
-
 
 
 date = datetime.datetime.now().strftime("%d.%m.%Y")
@@ -205,7 +228,6 @@ skaupat = select_kaupat("S-Ryhmä")
 kkaupat = select_kaupat("Kesko")
 tuotteet = get_tuotteet()
 
-'''
 driver = webdriver.Firefox()
 driver.get("https://www.k-ruoka.fi/")
 
@@ -213,7 +235,7 @@ for k in kkaupat:
     kloop(k[1], k[0], tuotteet)
 
 driver.close()
-'''
+
 d = webdriver.Firefox()
 d.get("https://www.foodie.fi")
 for s in skaupat:
