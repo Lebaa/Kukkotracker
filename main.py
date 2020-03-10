@@ -11,7 +11,7 @@ c = conn.cursor()
 
 def create_kauppa():
     c.execute(
-        "CREATE TABLE IF NOT EXISTS kauppa ( id INTEGER PRIMARY KEY, nimi, ketju)"
+        "CREATE TABLE IF NOT EXISTS kauppa ( id INTEGER PRIMARY KEY, nimi TEXT, ketju TEXT)"
     )
 
 
@@ -62,13 +62,13 @@ def get_tuotteet():
 
 def get_hinta(tuote_id, kauppa_id):
     sql = "SELECT * FROM hintaKaupassa WHERE kauppa_id = ? AND tuote_ID = ?"
-    c.execute(sql, (kauppa_id, tuote_id))
+    c.execute(sql, (tuote_id, kauppa_id))
     return c.fetchall()
 
 
 def update_hinta(tuote_id, kauppa_id, hinta, date):
-    sql = "UPDATE hintaKaupassa SET hinta = ?, paivays = ? WHERE kauppa_id = ? AND tuote_id = ?"
-    c.execute(sql, (hinta, date, kauppa_id, tuote_id))
+    sql = "UPDATE hintaKaupassa SET hinta = ?, paivays = ? WHERE tuote_id = ? AND kauppa_id = ?"
+    c.execute(sql, (hinta, date, tuote_id, kauppa_id))
     conn.commit()
 
 
@@ -83,7 +83,7 @@ def hintavertailu(tuote_id, kauppa_id, hinta_nyt):
     if len(get_hinta(tuote_id, kauppa_id)) == 0:
         print("tyhjää")
         hinta_tauluun(tuote_id, kauppa_id, hinta_nyt, date)
-    elif str(hinta_nyt).strip() == str(get_hinta(kauppa_id, tuote_id)[0][3]).strip():
+    elif str(hinta_nyt).strip() == str(get_hinta(tuote_id, kauppa_id)[0][3]).strip():
         print("sama hinta")
     else:
         print(str(tuote_id), " + " + str(kauppa_id))
@@ -94,14 +94,11 @@ def hintavertailu(tuote_id, kauppa_id, hinta_nyt):
         update_hinta(tuote_id, kauppa_id, hinta_nyt, date)
         print(
             "Hinta muuttunut: "
-            + get_hinta(kauppa_id, tuote_id)[0][3]
+            + get_hinta(tuote_id, kauppa_id)[0][3]
             + " - "
             + hinta_nyt
         )
-
-
-"""
-
+'''
 kaupat = [
     "K-Citymarket Jyväskylä Palokka",
     "K-Citymarket Keljo",
@@ -126,8 +123,8 @@ skaupat = [
     "S-market Kuokkala",
     "S-Market Palokka",
     "S-market Savela",
-]"""
-
+]
+'''
 
 def kloop(kauppa, kauppa_id, tuotteet):
 
@@ -221,7 +218,6 @@ def sloop(kauppa, kauppa_id, tuotteet):
             a = "Ei valikoimassa"
             hintavertailu(t[0], kauppa_id, a)
             sleep(6)
-
 
 date = datetime.datetime.now().strftime("%d.%m.%Y")
 skaupat = select_kaupat("S-Ryhmä")
