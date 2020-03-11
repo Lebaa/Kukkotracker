@@ -4,6 +4,9 @@ from selenium.webdriver.common.keys import Keys
 import sqlite3
 from selenium.common.exceptions import NoSuchElementException
 import datetime
+import string
+
+clean = lambda dirty: ''.join(filter(string.printable.__contains__, dirty))
 
 conn = sqlite3.connect("kukko.db")
 c = conn.cursor()
@@ -61,7 +64,7 @@ def get_tuotteet():
 
 
 def get_hinta(tuote_id, kauppa_id):
-    sql = "SELECT * FROM hintaKaupassa WHERE kauppa_id = ? AND tuote_ID = ?"
+    sql = "SELECT * FROM hintaKaupassa WHERE tuote_id = ? AND kauppa_id = ?"
     c.execute(sql, (tuote_id, kauppa_id))
     return c.fetchall()
 
@@ -79,12 +82,14 @@ def insert_historia(tuote_id, kauppa_id, hinta, date):
 
 
 def hintavertailu(tuote_id, kauppa_id, hinta_nyt):
+    print("#" * 50)
 
     if len(get_hinta(tuote_id, kauppa_id)) == 0:
-        print("tyhjää")
         hinta_tauluun(tuote_id, kauppa_id, hinta_nyt, date)
     elif str(hinta_nyt).strip() == str(get_hinta(tuote_id, kauppa_id)[0][3]).strip():
-        print("sama hinta")
+        print("Sama hinta ei toimita")
+        print(str(hinta_nyt).strip())
+        print(str(get_hinta(tuote_id,kauppa_id)[0][3]).strip())
     else:
         print(str(tuote_id), " + " + str(kauppa_id))
         get = get_hinta(tuote_id, kauppa_id)[0]
@@ -92,12 +97,11 @@ def hintavertailu(tuote_id, kauppa_id, hinta_nyt):
         hist_pvm = get[4]
         insert_historia(tuote_id, kauppa_id, hist_hinta, hist_pvm)
         update_hinta(tuote_id, kauppa_id, hinta_nyt, date)
-        print(
-            "Hinta muuttunut: "
-            + get_hinta(tuote_id, kauppa_id)[0][3]
-            + " - "
-            + hinta_nyt
-        )
+        print("Hinta muuttunut:")
+        print(get_hinta(tuote_id, kauppa_id)[0][3])
+        print(hinta_nyt)
+
+
 '''
 kaupat = [
     "K-Citymarket Jyväskylä Palokka",
@@ -134,38 +138,28 @@ def kloop(kauppa, kauppa_id, tuotteet):
     driver.find_element_by_xpath(
         "/html/body/div[1]/section/header/div[1]/nav/ul[2]/div/nav/div[2]/div/span/span"
     ).click()
-    driver.find_element_by_xpath(
-        "/html/body/div[2]/div/div[2]/div[2]/form/div/div/input"
-    ).send_keys(kauppa)
+    driver.find_element_by_xpath("/html/body/div[2]/div/div[2]/div[2]/form/div/div/input").send_keys(kauppa)
     sleep(5)
-    driver.find_element_by_xpath(
-        "/html/body/div[2]/div/div[2]/div[2]/div/div/a[1]/div[1]/div[2]"
-    ).click()
-    khaku = driver.find_element_by_xpath(
-        "/html/body/div[1]/section/section/div[2]/div[1]/div/div[2]/div/div[3]/input"
-    )
+    driver.find_element_by_xpath("/html/body/div[2]/div/div[2]/div[2]/div/div/a[1]/div[1]/div[2]").click()
+    khaku = driver.find_element_by_xpath("/html/body/div[1]/section/section/div[2]/div[1]/div/div[2]/div/div[3]/input")
     for t in tuotteet:
-
-        khaku.clear()
-        sleep(2)
-        khaku.send_keys(t[3])
-        sleep(5)
         try:
-            driver.find_element_by_xpath(
-                "/html/body/div[1]/section/section/div[2]/div[2]/div/div/div/div/div/ul/li[1]/div/a"
-            ).click()
+            khaku.clear()
             sleep(2)
-            a = driver.find_element_by_xpath(
-                "/html/body/div[1]/section/section/div[2]/div[2]/section/section/div/div[1]/section/section[1]/div[1]/div/div[1]/span"
-            ).text
-            driver.find_element_by_xpath(
-                "/html/body/div[1]/section/section/div[2]/div[2]/section/section/div/div[1]/section/a"
-            ).click()
-            hintavertailu(t[0], kauppa_id, a)
+            khaku.send_keys(t[3])
+            sleep(5)
+
+            driver.find_element_by_xpath("/html/body/div[1]/section/section/div[2]/div[2]/div/div/div/div/div/ul/li[1]/div/a").click()
+            sleep(5)
+            a = driver.find_element_by_xpath("/html/body/div[1]/section/section/div[2]/div[2]/section/section/div/div[1]/section/section[1]/div[1]/div/div[1]/span").text
+            driver.find_element_by_xpath("/html/body/div[1]/section/section/div[2]/div[2]/section/section/div/div[1]/section/a").click()
+            hintavertailu(t[0], kauppa_id, clean(a))
+
         except NoSuchElementException:
             pass
             a = "Ei valikoimassa"
-            hintavertailu(t[0], kauppa_id, a)
+            hintavertailu(t[0], kauppa_id, clean(a))
+
 
 
 def sloop(kauppa, kauppa_id, tuotteet):
@@ -192,32 +186,24 @@ def sloop(kauppa, kauppa_id, tuotteet):
         sleep(5)
         try:
             sleep(7)
-            d.find_element_by_xpath(
-                "/html/body/div[5]/div[2]/div[7]/div/div[2]/div[2]/div/div[3]/ul/li/a/div/img"
-            ).click()
+            d.find_element_by_xpath("/html/body/div[5]/div[2]/div[7]/div/div[2]/div[2]/div/div[3]/ul/li/a/div/img").click()
             sleep(5)
             a = (
                 d.find_element_by_xpath(
-                    "/html/body/div[7]/div/div/div/div[2]/div[2]/div[2]/div[1]/div/div[1]/div[2]/div/div/div[1]/div[1]/span[1]"
-                ).text
-                + ","
-                + d.find_element_by_xpath(
-                    "/html/body/div[7]/div/div/div/div[2]/div[2]/div[2]/div[1]/div/div[1]/div[2]/div/div/div[1]/div[1]/span[2]"
-                ).text
-            )
-            sleep(5)
+                    "/html/body/div[7]/div/div/div/div[2]/div[2]/div[2]/div[1]/div/div[1]/div[2]/div/div/div[1]/div[1]/span[1]").text+ ","+ d.find_element_by_xpath(
+                    "/html/body/div[7]/div/div/div/div[2]/div[2]/div[2]/div[1]/div/div[1]/div[2]/div/div/div[1]/div[1]/span[2]").text)
+            sleep(8)
             d.find_element_by_xpath(
                 "/html/body/div[7]/div/div/div/div[1]/button/span[1]"
             ).click()
-            sleep(6)
-
-            hintavertailu(t[0], kauppa_id, a)
+            sleep(4)
+            hintavertailu(t[0], kauppa_id,clean(a))
 
         except NoSuchElementException:
             pass
             a = "Ei valikoimassa"
-            hintavertailu(t[0], kauppa_id, a)
-            sleep(6)
+            hintavertailu(t[0], kauppa_id, clean(a))
+            sleep(4)
 
 date = datetime.datetime.now().strftime("%d.%m.%Y")
 skaupat = select_kaupat("S-Ryhmä")
@@ -238,4 +224,3 @@ for s in skaupat:
     sloop(s[1], s[0], tuotteet)
 
 d.close()
-
