@@ -164,7 +164,8 @@ def hintavertailu(tuote_id, kauppa_id, hinta_nyt,kappalehinta):
         get = get_hinta(tuote_id, kauppa_id)[0]
         hist_hinta = get[3]
         hist_pvm = get[4]
-        insert_historia(tuote_id, kauppa_id, hist_hinta, hist_pvm)
+        print("Kantaan lähtee: TuoteID: " + tuote_id + ", KauppaID: " + kauppa_id + ", hinta: ", hinta_nyt + "ja kappalehinta: " + kappalehinta)
+        #insert_historia(tuote_id, kauppa_id, hist_hinta, hist_pvm)
         update_hinta(tuote_id, kauppa_id, hinta_nyt, date, kappalehinta)
 
 def kloop(kauppa, kauppa_id, tuotteet):
@@ -199,7 +200,6 @@ def kloop(kauppa, kauppa_id, tuotteet):
             hintavertailu(t[0], kauppa_id, 99.99, 99.99)
         except TimeoutException:
             try:
-                print("No oha se kuitenki")
                 e = find_element(
                     driver,
                     "/html/body/div[1]/section/section/div[2]/div[2]/div/div/div/div/div/ul/li[1]/div/a",
@@ -270,7 +270,7 @@ def sloop(kauppa, kauppa_id, tuotteet):
                     sleep(4)
                 except TimeoutException:
                     pass
-                    hintavertailu(t[0], kauppa_id, 99.99, 99.99)   
+                    hintavertailu(t[0], kauppa_id, 99.99, 99.99)
                     sleep(4)
 
 
