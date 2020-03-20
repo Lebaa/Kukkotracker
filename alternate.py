@@ -100,12 +100,12 @@ def create_kauppa():
 
 
 def create_tuote():
-    command = "CREATE TABLE IF NOT EXISTS tuote (id INT AUTO_INCREMENT PRIMARY KEY, nimi TEXT, yksiköt TEXT, k_hakusana TEXT, s_hakusana TEXT)"
+    command = "CREATE TABLE IF NOT EXISTS tuote (id INT AUTO_INCREMENT PRIMARY KEY, nimi TEXT, yksiköt TEXT, viivakoodi TEXT)"
     novar_db_command(command)
 
 
 def create_hintaKaupassa():
-    command = "CREATE TABLE IF NOT EXISTS hintaKaupassa ( id INT AUTO_INCREMENT PRIMARY KEY, tuote_id INTEGER, kauppa_id INTEGER, hinta DECIMAL, paivays TEXT, FOREIGN KEY(tuote_id) REFERENCES tuote(id), FOREIGN KEY(kauppa_id) REFERENCES kauppa(id))"
+    command = "CREATE TABLE IF NOT EXISTS hintaKaupassa ( id INT AUTO_INCREMENT PRIMARY KEY, tuote_id INTEGER, kauppa_id INTEGER, hinta DECIMAL(4,2), paivays TEXT, FOREIGN KEY(tuote_id) REFERENCES tuote(id), FOREIGN KEY(kauppa_id) REFERENCES kauppa(id))"
     novar_db_command(command)
 
 
@@ -114,11 +114,11 @@ def create_hinta_historia():
     novar_db_command(command)
 
 
-def insert_tuote(nimi, nro, khaku, shkau):
+def insert_tuote(nimi, nro, viivakoodi):
     sql = (
-        "INSERT INTO tuote (nimi, yksiköt, k_hakusana, s_hakusana) VALUES (%s,%s,%s,%s)"
+        "INSERT INTO tuote (nimi, yksiköt, viivakoodi) VALUES (%s,%s,%s)"
     )
-    db_command(sql, (nimi, nro, khaku, shkau))
+    db_command(sql, (nimi, nro, viivakoodi))
 
 
 def insert_kaupat(kauppa, ketju):
@@ -126,9 +126,9 @@ def insert_kaupat(kauppa, ketju):
     db_command(command, (kauppa, ketju))
 
 
-def hinta_tauluun(tuote_id, kauppa_id, hinta, date):
-    sql = "INSERT INTO hintaKaupassa (tuote_id, kauppa_id, hinta, paivays) VALUES (%s,%s,%s,%s)"
-    db_command(sql, (tuote_id, kauppa_id, hinta, date))
+def hinta_tauluun(tuote_id, kauppa_id, hinta, date, kappalehinta):
+    sql = "INSERT INTO hintaKaupassa (tuote_id, kauppa_id, hinta, paivays, kappalehinta) VALUES (%s,%s,%s,%s, %s)"
+    db_command(sql, (tuote_id, kauppa_id, hinta, date, kappalehinta))
 
 
 def select_kaupat(ketju):
@@ -146,9 +146,9 @@ def get_hinta(tuote_id, kauppa_id):
     return db_command(sql, (tuote_id, kauppa_id))
 
 
-def update_hinta(tuote_id, kauppa_id, hinta, date):
-    sql = "UPDATE hintaKaupassa SET hinta = %s, paivays = %s WHERE tuote_id = %s AND kauppa_id = %s"
-    return db_command(sql, (hinta, date, tuote_id, kauppa_id))
+def update_hinta(tuote_id, kauppa_id, hinta, date, kappalehinta):
+    sql = "UPDATE hintaKaupassa SET hinta = %s, paivays = %s, kappalehinta = %s WHERE tuote_id = %s AND kauppa_id = %s"
+    return db_command(sql, (hinta, date, kappalehinta, tuote_id, kauppa_id))
 
 
 def insert_historia(tuote_id, kauppa_id, hinta, date):
@@ -156,16 +156,16 @@ def insert_historia(tuote_id, kauppa_id, hinta, date):
     return db_command(sql, (tuote_id, kauppa_id, hinta, date))
 
 
-def hintavertailu(tuote_id, kauppa_id, hinta_nyt):
+def hintavertailu(tuote_id, kauppa_id, hinta_nyt,kappalehinta):
 
     if len(get_hinta(tuote_id, kauppa_id)) == 0:
-        hinta_tauluun(tuote_id, kauppa_id, hinta_nyt, date)
+        hinta_tauluun(tuote_id, kauppa_id, hinta_nyt, date, kappalehinta)
     else:
         get = get_hinta(tuote_id, kauppa_id)[0]
         hist_hinta = get[3]
         hist_pvm = get[4]
         insert_historia(tuote_id, kauppa_id, hist_hinta, hist_pvm)
-        update_hinta(tuote_id, kauppa_id, hinta_nyt, date)
+        update_hinta(tuote_id, kauppa_id, hinta_nyt, date, kappalehinta)
 
 def kloop(kauppa, kauppa_id, tuotteet):
 
@@ -193,12 +193,10 @@ def kloop(kauppa, kauppa_id, tuotteet):
 
         try:
             khaku.clear()
-            sleep(1)
             khaku.send_keys(t[3])
             sleep(2)
             e = ei_kkaupassa(driver,"/html/body/div[1]/section/section/div[2]/div[2]/div/div/div/div/div/div[1]/h1/span")
-            print("Ei sitä oo perkele")
-            hintavertailu(t[0], kauppa_id, 99.99)
+            hintavertailu(t[0], kauppa_id, 99.99, 99.99)
         except TimeoutException:
             try:
                 print("No oha se kuitenki")
@@ -215,15 +213,15 @@ def kloop(kauppa, kauppa_id, tuotteet):
                 e = find_element(driver,
                                  "/html/body/div[1]/section/section/div[2]/div[2]/section/section/div/div[1]/section/a", )
                 e.click()
-                hintavertailu(t[0], kauppa_id, a)
+                hintavertailu(t[0], kauppa_id, a, float(a)/int(t[2]))
 
             except NoSuchElementException:
                 pass
-                hintavertailu(t[0], kauppa_id, 99.99)
+                hintavertailu(t[0], kauppa_id, 99.99, 99.99)
 
             except TimeoutException:
                 pass
-                hintavertailu(t[0], kauppa_id, 99.99)
+                hintavertailu(t[0], kauppa_id, 99.99, 99.99)
 
 
 def sloop(kauppa, kauppa_id, tuotteet):
@@ -241,25 +239,19 @@ def sloop(kauppa, kauppa_id, tuotteet):
             "/html/body/div[5]/div[2]/div[7]/div/div[3]/div[2]/div/ul/li[1]/div[1]/div[1]/a[2]",
         )
         e.click()
-        sleep(10)
-
         e = find_element(d, "/html/body/div[5]/div[2]/header/div[2]/div/div/div/div/a")
         e.click()
-        sleep(10)
         for t in tuotteet:
             d.find_element_by_xpath('//*[@id="multisearch-query"]').clear()
-            d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(t[4])
+            d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(t[3])
             d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(Keys.ENTER)
             sleep(10)
 
             try:
                 e = ei_skaupassa(d,"/html/body/div[5]/div[2]/div[7]/div/div[2]/div[2]/div/div[2]/h2")
-                print("eio")
                 hintavertailu(t[0], kauppa_id, 99.99)
             except TimeoutException:
                 try:
-                    e = find_element(d,"/html/body/div[5]/div[2]/div[7]/div/div[2]/div[2]/div/div[3]/ul/li/a/div/img")
-                    e.click()
                     e1 = find_element(
                         d,
                         "/html/body/div[5]/div[2]/div[7]/div[2]/div[2]/div[1]/div/div[1]/div[2]/div/div/div[1]/div[1]/span[1]",
@@ -270,7 +262,7 @@ def sloop(kauppa, kauppa_id, tuotteet):
                         "/html/body/div[5]/div[2]/div[7]/div[2]/div[2]/div[1]/div/div[1]/div[2]/div/div/div[1]/div[1]/span[2]",
                     )
                     a = e1.text + "." + e2.text
-                    hintavertailu(t[0], kauppa_id, a)
+                    hintavertailu(t[0], kauppa_id, a, float(a)/int(t[2]))
 
                 except NoSuchElementException:
                     pass
@@ -283,40 +275,62 @@ def sloop(kauppa, kauppa_id, tuotteet):
 
 
 # create_kauppa()
-# create_tuote()
+#create_tuote()
 #create_hintaKaupassa()
-# create_hinta_historia()
+#create_hinta_historia()
 # for k in kaupat:
 #    insert_kaupat(k,"Kesko")
 # for s in skaupat:
 #    insert_kaupat(s,"S-Ryhmä")
-#insert_tuote("Sandels 8-pack", 8, "6419800020271", "sandels 8 x")
-#insert_tuote("Sandels 18-pack", 18, "6419802021238", "sandels 18 x")
-#insert_tuote("Sandels 24-pack", 24, "sandels 24-pack", "sandels 24 x")
-# insert_tuote("Kukko lager 12-pack", 12, "Kukko lager 12-", "Kukko lager 12 x")
-# insert_tuote("Kukko lager 6-pack", 6, "Kukko lager 6-pack", "Kukko lager 6 x")
-
+'''
+insert_tuote("Sandels 8-pack%", 8, "6419800020271")
+insert_tuote("Sandels 18-pack%", 18, "6419802021238")
+insert_tuote("Sandels 24-pack%", 24, "6419802020491")
+insert_tuote("Kukko lager 12-pack ", 12, "6418654202024")
+insert_tuote("Kukko lager 6-pack", 6, "6418654204387")
+insert_tuote("A.Le Coq Premium 8-pack", 8, "6419800021285")
+insert_tuote("A.Le Coq Premium 18-pack", 8, "6419800022268")
+insert_tuote("A.Le Coq Premium 24-pack", 24, "6419802022136")
+insert_tuote("Karhu 8-pack", 8, "6415600002806")
+insert_tuote("Karhu 18-pack", 18, "6415600512961")
+insert_tuote("Karhu 24-pack", 24, "6415600020152")
+insert_tuote("Pirkka 24-pack", 24, "6410405091284")
+insert_tuote("Pirkka 12-pack", 12, "6410405113306")
+insert_tuote("Karjala 6-pack", 6, "6413605094161")
+insert_tuote("Karjala 8-pack", 8, "6413605142152")
+insert_tuote("Karjala 24-pack", 24, "6413601094219")
+insert_tuote("Koff 8-pack", 8, "6415600549448")
+insert_tuote("Koff 24-pack", 24, "6415600549349")
+insert_tuote("Olvi 8-pack", 8, "6419800020417")
+insert_tuote("Olvi 24-pack", 24, "6419802020217")
+'''
 
 date = datetime.datetime.now().strftime("%d.%m.%Y")
 skaupat = select_kaupat("S-Ryhmä")
 kkaupat = select_kaupat("Kesko")
 tuotteet = get_tuotteet()
-print(datetime.datetime.now().strftime("%H:%M:%S"))
 
 driver = webdriver.Firefox()
 driver.get("https://www.k-ruoka.fi/")
 
 for k in kkaupat:
+    print("#"*100)
+    print(k[1])
+    print(datetime.datetime.now().strftime("%H:%M:%S"))
     kloop(k[1], k[0], tuotteet)
-
 driver.close()
 
 d = webdriver.Firefox()
 d.get("https://www.foodie.fi")
-e = find_element(d,"/html/body/div[8]/div/div[2]/div/button[1]")
+e = find_element(d, "/html/body/div[8]/div/div[2]/div/button[1]")
 e.click()
 sleep(2)
+
 for s in skaupat:
+    print("#"*100)
+    print(s[1])
+    print(datetime.datetime.now().strftime("%H:%M:%S"))
     sloop(s[1], s[0], tuotteet)
 d.close()
+
 print(datetime.datetime.now().strftime("%H:%M:%S"))
