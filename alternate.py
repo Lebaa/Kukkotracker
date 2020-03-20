@@ -266,11 +266,11 @@ def sloop(kauppa, kauppa_id, tuotteet):
 
                 except NoSuchElementException:
                     pass
-                    hintavertailu(t[0], kauppa_id, 99.99)
+                    hintavertailu(t[0], kauppa_id, 99.99, 99.99)
                     sleep(4)
                 except TimeoutException:
                     pass
-                    hintavertailu(t[0], kauppa_id, 99.99)
+                    hintavertailu(t[0], kauppa_id, 99.99, 99.99)   
                     sleep(4)
 
 
