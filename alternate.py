@@ -5,7 +5,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import sqlite3
-from selenium.common.exceptions import NoSuchElementException, ElementNotInteractableException
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    ElementNotInteractableException,
+)
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import ElementNotInteractableException
 import datetime
@@ -78,21 +81,27 @@ def find_element(driver, xpath):
     )
     return element
 
+
 def ei_kkaupassa(driver, xpath):
     element = WebDriverWait(driver, 8).until(
         EC.presence_of_element_located((By.XPATH, xpath,))
     )
     return element
 
-def ei_skaupassa(driver,xpath):
+
+def ei_skaupassa(driver, xpath):
     element = WebDriverWait(driver, 8).until(
         EC.presence_of_element_located((By.XPATH, xpath,))
     )
     return element
 
-def find_ruksi(driver,xpath):
-    element = WebDriverWait(driver,30).until((EC.element_to_be_clickable((By.XPATH,xpath))))
+
+def find_ruksi(driver, xpath):
+    element = WebDriverWait(driver, 30).until(
+        (EC.element_to_be_clickable((By.XPATH, xpath)))
+    )
     return element
+
 
 def create_kauppa():
     command = "CREATE TABLE IF NOT EXISTS kauppa ( id INT AUTO_INCREMENT PRIMARY KEY, nimi TEXT, ketju TEXT)"
@@ -115,9 +124,7 @@ def create_hinta_historia():
 
 
 def insert_tuote(nimi, nro, viivakoodi):
-    sql = (
-        "INSERT INTO tuote (nimi, yksiköt, viivakoodi) VALUES (%s,%s,%s)"
-    )
+    sql = "INSERT INTO tuote (nimi, yksiköt, viivakoodi) VALUES (%s,%s,%s)"
     db_command(sql, (nimi, nro, viivakoodi))
 
 
@@ -156,7 +163,7 @@ def insert_historia(tuote_id, kauppa_id, hinta, date):
     return db_command(sql, (tuote_id, kauppa_id, hinta, date))
 
 
-def hintavertailu(tuote_id, kauppa_id, hinta_nyt,kappalehinta):
+def hintavertailu(tuote_id, kauppa_id, hinta_nyt, kappalehinta):
 
     if len(get_hinta(tuote_id, kauppa_id)) == 0:
         hinta_tauluun(tuote_id, kauppa_id, hinta_nyt, date, kappalehinta)
@@ -164,9 +171,19 @@ def hintavertailu(tuote_id, kauppa_id, hinta_nyt,kappalehinta):
         get = get_hinta(tuote_id, kauppa_id)[0]
         hist_hinta = get[3]
         hist_pvm = get[4]
-        print("Kantaan lähtee: TuoteID: " + tuote_id + ", KauppaID: " + kauppa_id + ", hinta: ", hinta_nyt + "ja kappalehinta: " + kappalehinta)
-        #insert_historia(tuote_id, kauppa_id, hist_hinta, hist_pvm)
+        print(
+            "Kantaan lähtee: TuoteID: "
+            + str(tuote_id)
+            + ", KauppaID: "
+            + str(kauppa_id)
+            + ", hinta: "
+            + str(hinta_nyt)
+            + "ja kappalehinta: "
+            + str(kappalehinta),
+        )
+        # insert_historia(tuote_id, kauppa_id, hist_hinta, hist_pvm)
         update_hinta(tuote_id, kauppa_id, hinta_nyt, date, kappalehinta)
+
 
 def kloop(kauppa, kauppa_id, tuotteet):
 
@@ -196,7 +213,10 @@ def kloop(kauppa, kauppa_id, tuotteet):
             khaku.clear()
             khaku.send_keys(t[3])
             sleep(2)
-            e = ei_kkaupassa(driver,"/html/body/div[1]/section/section/div[2]/div[2]/div/div/div/div/div/div[1]/h1/span")
+            e = ei_kkaupassa(
+                driver,
+                "/html/body/div[1]/section/section/div[2]/div[2]/div/div/div/div/div/div[1]/h1/span",
+            )
             hintavertailu(t[0], kauppa_id, 99.99, 99.99)
         except TimeoutException:
             try:
@@ -210,10 +230,12 @@ def kloop(kauppa, kauppa_id, tuotteet):
                     "/html/body/div[1]/section/section/div[2]/div[2]/section/section/div/div[1]/section/section[1]/div[1]/div/div[1]/span",
                 )
                 a = e.text.replace(",", ".")
-                e = find_element(driver,
-                                 "/html/body/div[1]/section/section/div[2]/div[2]/section/section/div/div[1]/section/a", )
+                e = find_element(
+                    driver,
+                    "/html/body/div[1]/section/section/div[2]/div[2]/section/section/div/div[1]/section/a",
+                )
                 e.click()
-                hintavertailu(t[0], kauppa_id, a, float(a)/int(t[2]))
+                hintavertailu(t[0], kauppa_id, a, float(a) / int(t[2]))
 
             except NoSuchElementException:
                 pass
@@ -226,63 +248,64 @@ def kloop(kauppa, kauppa_id, tuotteet):
 
 def sloop(kauppa, kauppa_id, tuotteet):
 
-        e = find_element(
-            d,
-            "/html/body/div[5]/div[2]/header/div[3]/div/div[1]/div/nav/ul/li[4]/div/a/span",
-        )
-        e.click()
-        sleep(10)
-        d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(kauppa)
+    e = find_element(
+        d,
+        "/html/body/div[5]/div[2]/header/div[3]/div/div[1]/div/nav/ul/li[4]/div/a/span",
+    )
+    e.click()
+    sleep(10)
+    d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(kauppa)
+    d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(Keys.ENTER)
+    e = find_element(
+        d,
+        "/html/body/div[5]/div[2]/div[7]/div/div[3]/div[2]/div/ul/li[1]/div[1]/div[1]/a[2]",
+    )
+    e.click()
+    e = find_element(d, "/html/body/div[5]/div[2]/header/div[2]/div/div/div/div/a")
+    e.click()
+    for t in tuotteet:
+        d.find_element_by_xpath('//*[@id="multisearch-query"]').clear()
+        d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(t[3])
         d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(Keys.ENTER)
-        e = find_element(
-            d,
-            "/html/body/div[5]/div[2]/div[7]/div/div[3]/div[2]/div/ul/li[1]/div[1]/div[1]/a[2]",
-        )
-        e.click()
-        e = find_element(d, "/html/body/div[5]/div[2]/header/div[2]/div/div/div/div/a")
-        e.click()
-        for t in tuotteet:
-            d.find_element_by_xpath('//*[@id="multisearch-query"]').clear()
-            d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(t[3])
-            d.find_element_by_xpath('//*[@id="multisearch-query"]').send_keys(Keys.ENTER)
-            sleep(10)
+        sleep(10)
 
+        try:
+            e = ei_skaupassa(
+                d, "/html/body/div[5]/div[2]/div[7]/div/div[2]/div[2]/div/div[2]/h2"
+            )
+            hintavertailu(t[0], kauppa_id, 99.99)
+        except TimeoutException:
             try:
-                e = ei_skaupassa(d,"/html/body/div[5]/div[2]/div[7]/div/div[2]/div[2]/div/div[2]/h2")
-                hintavertailu(t[0], kauppa_id, 99.99)
+                e1 = find_element(
+                    d,
+                    "/html/body/div[5]/div[2]/div[7]/div[2]/div[2]/div[1]/div/div[1]/div[2]/div/div/div[1]/div[1]/span[1]",
+                )
+                e2 = find_element(
+                    d,
+                    "/html/body/div[5]/div[2]/div[7]/div[2]/div[2]/div[1]/div/div[1]/div[2]/div/div/div[1]/div[1]/span[2]",
+                )
+                a = e1.text + "." + e2.text
+                hintavertailu(t[0], kauppa_id, a, float(a) / int(t[2]))
+
+            except NoSuchElementException:
+                pass
+                hintavertailu(t[0], kauppa_id, 99.99, 99.99)
+                sleep(4)
             except TimeoutException:
-                try:
-                    e1 = find_element(
-                        d,
-                        "/html/body/div[5]/div[2]/div[7]/div[2]/div[2]/div[1]/div/div[1]/div[2]/div/div/div[1]/div[1]/span[1]",
-
-                    )
-                    e2 = find_element(
-                        d,
-                        "/html/body/div[5]/div[2]/div[7]/div[2]/div[2]/div[1]/div/div[1]/div[2]/div/div/div[1]/div[1]/span[2]",
-                    )
-                    a = e1.text + "." + e2.text
-                    hintavertailu(t[0], kauppa_id, a, float(a)/int(t[2]))
-
-                except NoSuchElementException:
-                    pass
-                    hintavertailu(t[0], kauppa_id, 99.99, 99.99)
-                    sleep(4)
-                except TimeoutException:
-                    pass
-                    hintavertailu(t[0], kauppa_id, 99.99, 99.99)
-                    sleep(4)
+                pass
+                hintavertailu(t[0], kauppa_id, 99.99, 99.99)
+                sleep(4)
 
 
 # create_kauppa()
-#create_tuote()
-#create_hintaKaupassa()
-#create_hinta_historia()
+# create_tuote()
+# create_hintaKaupassa()
+# create_hinta_historia()
 # for k in kaupat:
 #    insert_kaupat(k,"Kesko")
 # for s in skaupat:
 #    insert_kaupat(s,"S-Ryhmä")
-'''
+"""
 insert_tuote("Sandels 8-pack%", 8, "6419800020271")
 insert_tuote("Sandels 18-pack%", 18, "6419802021238")
 insert_tuote("Sandels 24-pack%", 24, "6419802020491")
@@ -303,7 +326,7 @@ insert_tuote("Koff 8-pack", 8, "6415600549448")
 insert_tuote("Koff 24-pack", 24, "6415600549349")
 insert_tuote("Olvi 8-pack", 8, "6419800020417")
 insert_tuote("Olvi 24-pack", 24, "6419802020217")
-'''
+"""
 
 date = datetime.datetime.now().strftime("%d.%m.%Y")
 skaupat = select_kaupat("S-Ryhmä")
@@ -314,7 +337,7 @@ driver = webdriver.Firefox()
 driver.get("https://www.k-ruoka.fi/")
 
 for k in kkaupat:
-    print("#"*100)
+    print("#" * 100)
     print(k[1])
     print(datetime.datetime.now().strftime("%H:%M:%S"))
     kloop(k[1], k[0], tuotteet)
@@ -327,7 +350,7 @@ e.click()
 sleep(2)
 
 for s in skaupat:
-    print("#"*100)
+    print("#" * 100)
     print(s[1])
     print(datetime.datetime.now().strftime("%H:%M:%S"))
     sloop(s[1], s[0], tuotteet)
