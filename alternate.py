@@ -297,38 +297,6 @@ def sloop(kauppa, kauppa_id, tuotteet):
                 hintavertailu(t[0], kauppa_id, 99.99, 99.99)
                 sleep(4)
 
-
-# create_kauppa()
-# create_tuote()
-# create_hintaKaupassa()
-# create_hinta_historia()
-# for k in kaupat:
-#    insert_kaupat(k,"Kesko")
-# for s in skaupat:
-#    insert_kaupat(s,"S-Ryhmä")
-"""
-insert_tuote("Sandels 8-pack%", 8, "6419800020271")
-insert_tuote("Sandels 18-pack%", 18, "6419802021238")
-insert_tuote("Sandels 24-pack%", 24, "6419802020491")
-insert_tuote("Kukko lager 12-pack ", 12, "6418654202024")
-insert_tuote("Kukko lager 6-pack", 6, "6418654204387")
-insert_tuote("A.Le Coq Premium 8-pack", 8, "6419800021285")
-insert_tuote("A.Le Coq Premium 18-pack", 8, "6419800022268")
-insert_tuote("A.Le Coq Premium 24-pack", 24, "6419802022136")
-insert_tuote("Karhu 8-pack", 8, "6415600002806")
-insert_tuote("Karhu 18-pack", 18, "6415600512961")
-insert_tuote("Karhu 24-pack", 24, "6415600020152")
-insert_tuote("Pirkka 24-pack", 24, "6410405091284")
-insert_tuote("Pirkka 12-pack", 12, "6410405113306")
-insert_tuote("Karjala 6-pack", 6, "6413605094161")
-insert_tuote("Karjala 8-pack", 8, "6413605142152")
-insert_tuote("Karjala 24-pack", 24, "6413601094219")
-insert_tuote("Koff 8-pack", 8, "6415600549448")
-insert_tuote("Koff 24-pack", 24, "6415600549349")
-insert_tuote("Olvi 8-pack", 8, "6419800020417")
-insert_tuote("Olvi 24-pack", 24, "6419802020217")
-"""
-
 date = datetime.datetime.now().strftime("%d.%m.%Y")
 skaupat = select_kaupat("S-Ryhmä")
 kkaupat = select_kaupat("Kesko")
