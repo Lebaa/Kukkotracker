@@ -3,6 +3,7 @@ from time import sleep
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 import sqlite3
 from selenium.common.exceptions import (
@@ -333,7 +334,12 @@ skaupat = select_kaupat("S-Ryhmä")
 kkaupat = select_kaupat("Kesko")
 tuotteet = get_tuotteet()
 
-driver = webdriver.Firefox()
+options = Options()
+options.add_argument("--remote-debugging-port=9222")
+options.add_argument("start-maximized")
+options.add_argument("--no-sandbox")
+
+driver = webdriver.Chrome(executable_path="/usr/bin/chromedriver", chrome_options=options)
 driver.get("https://www.k-ruoka.fi/")
 
 for k in kkaupat:
@@ -343,7 +349,7 @@ for k in kkaupat:
     kloop(k[1], k[0], tuotteet)
 driver.close()
 
-d = webdriver.Firefox()
+d = webdriver.Chrome(executable_path="/usr/bin/chromedriver", chrome_options=options)
 d.get("https://www.foodie.fi")
 e = find_element(d, "/html/body/div[8]/div/div[2]/div/button[1]")
 e.click()
