@@ -14,11 +14,12 @@ from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import ElementNotInteractableException
 import datetime
 import string
-import MySQLdb as mysql
+import mysql.connector as mysql
 import sshtunnel
 
-sshtunnel.SSH_TIMEOUT = 5.0
-sshtunnel.TUNNEL_TIMEOUT = 5.0
+print("Muip")
+sshtunnel.SSH_TIMEOUT = 1.0
+sshtunnel.TUNNEL_TIMEOUT = 1.0
 
 
 def novar_db_command(command):
@@ -71,10 +72,6 @@ def db_command(command, variables):
 
 
 clean = lambda dirty: "".join(filter(string.printable.__contains__, dirty))
-
-conn = sqlite3.connect("kukko.db")
-c = conn.cursor()
-
 
 def find_element(driver, xpath):
     element = WebDriverWait(driver, 30).until(
@@ -298,8 +295,11 @@ def sloop(kauppa, kauppa_id, tuotteet):
                 sleep(4)
 
 date = datetime.datetime.now().strftime("%d.%m.%Y")
+print("Muip")
 skaupat = select_kaupat("S-Ryhmä")
+print("Muip")
 kkaupat = select_kaupat("Kesko")
+print("Muip")
 tuotteet = get_tuotteet()
 
 options = Options()
