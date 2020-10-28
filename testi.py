@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.options import Options
 from time import sleep
 import pymysql
 import sshtunnel
@@ -218,7 +219,7 @@ def kloop(driver, kkauppa):
     e.click()
     e = find_element(
         driver,
-        '//*[@id="store-menu"]/div[2]/div/span',
+        '//*[@id="store-menu"]/div[2]/div/span/span',
     )
     e.click()
     sleep(3)
@@ -267,7 +268,13 @@ kaupat = select_kaupat("Kesko")
 skaupat = select_kaupat("S-Ryhmä")
 tuotteet = get_tuotteet()
 
-driver = webdriver.Chrome(executable_path="/usr/bin/chromedriver")
+options = Options()
+options.add_argument("--remote-debugging-port=9222")
+options.add_argument("start-maximized")
+#options.headless = True
+options.add_argument("--no-sandbox")
+
+driver = webdriver.Chrome(executable_path="/usr/bin/chromedriver", chrome_options=options)
 driver.get("https://www.k-ruoka.fi/")
 driver.find_element_by_xpath('//*[@id="kconsent"]/div/div/div[2]/div[3]/div[1]/button[2]').click()
 
@@ -275,7 +282,7 @@ for k in kaupat:
     kloop(driver, k)
 driver.close()
 
-d = webdriver.Chrome(executable_path="/usr/bin/chromedriver")
+d = webdriver.Chrome(executable_path="/usr/bin/chromedriver", chrome_options=options)
 d.get("https://www.foodie.fi")
 e = find_element(d, "/html/body/div[8]/div/div[2]/div/button[1]")
 e.click()
