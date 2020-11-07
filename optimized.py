@@ -19,7 +19,7 @@ date = datetime.now().strftime("%d.%m.%Y")
 sshtunnel.SSH_TIMEOUT = 5.0
 sshtunnel.TUNNEL_TIMEOUT = 5.0
 
-tunneli = sshtunnel.SSHTunnelForwarder(('ssh.eu.pythonanywhere.com',22), ssh_username="Leba", ssh_password="Lebalol123",
+tunneli = sshtunnel.SSHTunnelForwarder(('ssh.eu.pythonanywhere.com',22), ssh_username="*", ssh_password="*",
                                        remote_bind_address=("Leba.mysql.eu.pythonanywhere-services.com", 3306))
 tunneli.start()
 print("muip")
@@ -28,7 +28,7 @@ def novar_db_command(command):
 
         connection = pymysql.connect(
             user="Leba",
-            password="superpassu",
+            password="*",
             host="127.0.0.1",
             port=tunneli.local_bind_port,
             database="Leba$Kukko")
@@ -49,7 +49,7 @@ def db_command(command, variables):
         connection = pymysql.connect(
             host="127.0.0.1",
             user="Leba",
-            password="superpassu",
+            password="*",
             database="Leba$Kukko",
             port=tunneli.local_bind_port
         )
